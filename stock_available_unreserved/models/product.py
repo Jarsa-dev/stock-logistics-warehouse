@@ -105,6 +105,7 @@ class ProductProduct(models.Model):
         return res
 
     @api.multi
+    @api.depends('stock_move_ids.product_qty', 'stock_move_ids.state')
     def _compute_qty_available_not_reserved(self):
         res = self._compute_product_available_not_res_dict()
         for prod in self:
