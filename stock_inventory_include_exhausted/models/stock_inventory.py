@@ -15,9 +15,8 @@ class StockInventory(models.Model):
 
     def _get_inventory_lines_values(self):
         vals = super()._get_inventory_lines_values()
-
         if self.include_exhausted:
-            domain = [("qty_available", "=", 0), ("type", "=", "product")]
+            domain = [("qty_available", "<=", 0), ("type", "=", "product")]
             if self.product_ids:
                 domain.append(("id", "in", self.product_ids.ids))
             exhausted_products = self.env["product.product"].search(domain)
@@ -28,14 +27,13 @@ class StockInventory(models.Model):
                 "theoretical_qty": 0,
             }
             vals_dic["location_id"] = (
-                self.env["stock.warehouse"]
-                .search([("company_id", "=", vals_dic["company_id"])], limit=1)
-                .lot_stock_id.id
+                self.env['stock.location'].
+                search([('id', 'child_of', self.location_ids.ids)], limit=1)
+                .id
             )
             for product in exhausted_products:
                 vals_dic["product_id"] = product.id
                 vals_dic["product_uom_id"] = product.uom_id.id
 
                 vals.append(vals_dic.copy())
-
         return vals
