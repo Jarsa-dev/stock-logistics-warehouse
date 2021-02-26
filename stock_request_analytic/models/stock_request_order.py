@@ -17,6 +17,10 @@ class StockRequestOrder(models.Model):
         string="Analytic Accounts",
         readonly=True,
     )
+    analytic_account_id = fields.Many2one(
+        'account.analytic.account',
+        string="Analytic Account",
+    )
 
     @api.depends("stock_request_ids")
     def _compute_analytic_ids(self):
@@ -40,3 +44,13 @@ class StockRequestOrder(models.Model):
             ]
             action["res_id"] = analytics.id
         return action
+
+
+class StockRequest(models.Model):
+    _inherit = "stock.request"
+
+    @api.onchange("product_id")
+    def onchange_product_id(self):
+        res = super().onchange_product_id()
+        self.analytic_account_id = self.order_id.analytic_account_id.id
+        return res
